@@ -7,9 +7,10 @@
 // For a multi-platform app consider using e.g. SDL+DirectX on Windows and SDL+OpenGL on Linux/OSX.
 
 #include "imgui.h"
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_sdlrenderer2.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_sdlrenderer3.h"
 #include <stdio.h>
+#include <SDL3/SDL.h>
 #include <SDL.h>
 #include <string>
 #include <vector>
@@ -62,7 +63,7 @@ struct DeviceCapture
     SDL_AudioSpec desiredRecordingSpec;
     SDL_zero(desiredRecordingSpec);
     desiredRecordingSpec.freq = 44100;
-    desiredRecordingSpec.format = AUDIO_S32;
+    desiredRecordingSpec.format = SDL_AUDIO_S32;
     desiredRecordingSpec.channels = 2;
     desiredRecordingSpec.samples = 4096;
     desiredRecordingSpec.userdata = this;
@@ -76,7 +77,7 @@ struct DeviceCapture
       printf("Failed to open recording device! SDL Error: %s\n", SDL_GetError());
     }
 
-    SDL_PauseAudioDevice(mDeviceId, SDL_FALSE);
+    SDL_PlayAudioDevice(mDeviceId);
   }
 
   ~DeviceCapture()
@@ -106,10 +107,10 @@ struct DeviceCapture
     {
       std::lock_guard<std::mutex> lock(mMutex);
 
-      SDL_RWwrite(file, "RIFF", 4, 1); // Marks the file as a riff file.
+      SDL_RWwrite(file, "RIFF", 4); // Marks the file as a riff file.
       SDL_WriteLE32(file, (mBytes.size() + 36) /* size of the WAV header */); // size of file
-      SDL_RWwrite(file, "WAVE", 4, 1); // File type header
-      SDL_RWwrite(file, "fmt ", 4, 1); // Format chunk marker
+      SDL_RWwrite(file, "WAVE", 4); // File type header
+      SDL_RWwrite(file, "fmt ", 4); // Format chunk marker
       SDL_WriteLE32(file, 16); // Length of format data
       SDL_WriteLE16(file, 1); // Type of format
       SDL_WriteLE16(file, Channels); // Number of channels
@@ -117,9 +118,9 @@ struct DeviceCapture
       SDL_WriteLE32(file, ((mReceivedRecordingSpec.freq * BitsPerSample * 2) / 8)); // (Sample Rate * BitsPerSample * Channels) / 8
       SDL_WriteLE16(file, ((BitsPerSample * Channels) / 8)); // (BitsPerSample * Channels) / 8
       SDL_WriteLE16(file, BitsPerSample); //Bits per sample
-      SDL_RWwrite(file, "data", 4, 1); // “data” chunk header. Marks the beginning of the data section.
+      SDL_RWwrite(file, "data", 4); // “data” chunk header. Marks the beginning of the data section.
       SDL_WriteLE32(file, mBytes.size()); //Size of the data section.
-      SDL_RWwrite(file, mBytes.data(), mBytes.size(), 1);
+      SDL_RWwrite(file, mBytes.data(), mBytes.size());
     }
 
 
@@ -131,7 +132,7 @@ struct DeviceCapture
       return;
     }
 
-    auto test = SDL_RWwrite(file, fileBytes.data(), fileBytes.size(), 1);
+    auto test = SDL_RWwrite(file, fileBytes.data(), fileBytes.size());
 
     //Close file handler
     SDL_RWclose(file);
@@ -160,9 +161,9 @@ int main(int, char**)
 #endif
 
     // Create window with SDL_Renderer graphics context
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", 1280, 720, window_flags);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
     if (renderer == nullptr)
     {
         SDL_Log("Error creating SDL_Renderer!");
@@ -193,8 +194,8 @@ int main(int, char**)
     //ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
-    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer2_Init(renderer);
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
 
     auto currentAudioDriver = SDL_GetCurrentAudioDriver();
 
@@ -231,16 +232,17 @@ int main(int, char**)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
-            if (event.type == SDL_QUIT)
+          
+            ImGui_ImplSDL3_ProcessEvent(&event);
+            if (event.type == SDL_EVENT_QUIT)
                 done = true;
-            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+            if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window))
                 done = true;
         }
 
         // Start the Dear ImGui frame
-        ImGui_ImplSDLRenderer2_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
         if (ImGui::Begin("Another Window"))
@@ -282,16 +284,16 @@ int main(int, char**)
 
         // Rendering
         ImGui::Render();
-        SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+        SDL_SetRenderScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
         SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
         SDL_RenderClear(renderer);
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());
         SDL_RenderPresent(renderer);
     }
 
     // Cleanup
-    ImGui_ImplSDLRenderer2_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 
     SDL_DestroyRenderer(renderer);

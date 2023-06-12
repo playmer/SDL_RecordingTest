@@ -22,15 +22,15 @@ PRIVATE
 target_sources(RecordingExample
 PRIVATE
 
-    imgui/imgui_impl_sdl2.cpp
-    imgui/imgui_impl_sdl2.h
-    imgui/imgui_impl_sdlrenderer2.cpp
-    imgui/imgui_impl_sdlrenderer2.h
+    #imgui/imgui_impl_sdl2.cpp
+    #imgui/imgui_impl_sdl2.h
+    #imgui/imgui_impl_sdlrenderer2.cpp
+    #imgui/imgui_impl_sdlrenderer2.h
 
-    #imgui/imgui_impl_sdl3.cpp
-    #imgui/imgui_impl_sdl3.h
-    #imgui/imgui_impl_sdlrenderer3.cpp
-    #imgui/imgui_impl_sdlrenderer3.h
+    imgui/imgui_impl_sdl3.cpp
+    imgui/imgui_impl_sdl3.h
+    imgui/imgui_impl_sdlrenderer3.cpp
+    imgui/imgui_impl_sdlrenderer3.h
 )
 
 target_include_directories(RecordingExample PRIVATE imgui ../SDL-1/include)
@@ -38,7 +38,7 @@ target_include_directories(RecordingExample PRIVATE imgui ../SDL-1/include)
 add_subdirectory(SDL-1)
 
 set_target_properties(
-    SDL2 
+    SDL3-shared
     RecordingExample 
 PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY C:/repos/SDLRecording/SDL_RecordingTest/out/build/x64-Debug/bin
@@ -48,6 +48,5 @@ PROPERTIES
 
 target_link_libraries(RecordingExample 
 PRIVATE 
-    SDL2::SDL2
-    SDL2::SDL2main
+    SDL3::SDL3-shared
 )
