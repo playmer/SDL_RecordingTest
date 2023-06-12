@@ -21,19 +21,13 @@ PRIVATE
 
 target_sources(RecordingExample
 PRIVATE
-
     imgui/imgui_impl_sdl2.cpp
     imgui/imgui_impl_sdl2.h
     imgui/imgui_impl_sdlrenderer2.cpp
     imgui/imgui_impl_sdlrenderer2.h
-
-    #imgui/imgui_impl_sdl3.cpp
-    #imgui/imgui_impl_sdl3.h
-    #imgui/imgui_impl_sdlrenderer3.cpp
-    #imgui/imgui_impl_sdlrenderer3.h
 )
 
-target_include_directories(RecordingExample PRIVATE imgui ../SDL-1/include)
+target_include_directories(RecordingExample PRIVATE imgui)
 
 add_subdirectory(SDL-1)
 
