@@ -37,17 +37,8 @@ target_include_directories(RecordingExample PRIVATE imgui ../SDL-1/include)
 
 add_subdirectory(SDL-1)
 
-set_target_properties(
-    SDL2 
-    RecordingExample 
-PROPERTIES 
-    ARCHIVE_OUTPUT_DIRECTORY C:/repos/SDLRecording/SDL_RecordingTest/out/build/x64-Debug/bin
-    LIBRARY_OUTPUT_DIRECTORY C:/repos/SDLRecording/SDL_RecordingTest/out/build/x64-Debug/bin
-    RUNTIME_OUTPUT_DIRECTORY C:/repos/SDLRecording/SDL_RecordingTest/out/build/x64-Debug/bin
-)
-
 target_link_libraries(RecordingExample 
 PRIVATE 
-    SDL2::SDL2
+    SDL2::SDL2-static
     SDL2::SDL2main
 )
